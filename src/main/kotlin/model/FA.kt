@@ -39,7 +39,7 @@ class FA(
     }
 
     private fun mergeEpsilon() {
-        states.forEach {  flattenEpsilonNode(it, it) }
+        states.forEach { flattenEpsilonNode(it, it) }
         cleanupEpsilon()
     }
 
@@ -67,25 +67,48 @@ class FA(
         }
     }
 
+    private fun searchStartStates(): MutableList<State> {
+        val startStates: MutableList<State> = ArrayList()
+        val stack: Stack<State> = Stack()
+        stack.add(startState)
+
+        while (stack.isNotEmpty()) {
+            val state = stack.pop()
+            if (!startStates.contains(state)) {
+                startStates.add(state)
+            }
+            transitions.filter { it.from == state && it.via == 'ε' }.forEach {
+                for (s in it.tos) {
+                    if(!stack.contains(s)) {
+                        stack.push(s)
+                    }
+                }
+            }
+        }
+        return startStates
+    }
+
     private fun cleanupEpsilon() {
         transitions = transitions.filter { it.via != 'ε' }
     }
 
     fun buildDFA(): FA {
+        lateinit var newCompoundStartState: CompoundState
+
         if (hasEpsilonSide()) {
+            newCompoundStartState = CompoundState(searchStartStates())
             mergeEpsilon()
+        } else {
+            newCompoundStartState = CompoundState(startState)
         }
 
         if (hasMultipleTos()) {
-            val newStartState = startState
-            val compoundStartState = CompoundState(newStartState)
-
             val newCompoundStates = mutableListOf<CompoundState>()
-            newCompoundStates.add(compoundStartState)
+            newCompoundStates.add(newCompoundStartState)
             val newCompoundTransitions = mutableListOf<CompoundTransition>()
 
             val compoundStateQueue: Queue<CompoundState> = LinkedList()
-            compoundStateQueue.add(compoundStartState)
+            compoundStateQueue.add(newCompoundStartState)
 
             while (compoundStateQueue.isNotEmpty()) {
                 val compoundState = compoundStateQueue.poll()
@@ -103,13 +126,7 @@ class FA(
                 }
 
                 for (transition in transitionFromState) {
-                    var toState = CompoundState(
-                        id = transition.tos.joinToString("") { it.id },
-                        accepted = transition.tos.any { it.accepted },
-                        //TODO 有多个接受态怎么办
-                        token = transition.tos.find { it.accepted }?.token,
-                        states = transition.tos
-                    )
+                    var toState = CompoundState(transition.tos)
                     if (!newCompoundStates.any { it.states == toState.states }) {
                         newCompoundStates.add(toState)
                         compoundStateQueue.add(toState)
@@ -123,9 +140,10 @@ class FA(
                 }
             }
 
-            println("newCompoundStates: $newCompoundStates")
-            println("newCompoundTransitions: $newCompoundTransitions")
+//            println("newCompoundStates: $newCompoundStates")
+//            println("newCompoundTransitions: $newCompoundTransitions")
 
+            val newStartState = State(newCompoundStartState)
             val stateMap: MutableMap<CompoundState, State> = HashMap()
             val newStates = newCompoundStates.map { compoundState ->
                 val s = State(compoundState)

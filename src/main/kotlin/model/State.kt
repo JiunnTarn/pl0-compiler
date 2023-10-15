@@ -23,6 +23,13 @@ class CompoundState(
     val states: List<State>,
 ) {
     constructor(state: State) : this(state.id, state.accepted, state.token, listOf(state))
+    constructor(states: List<State>) : this(
+        states.joinToString("") { it.id },
+        states.any { it.accepted },
+        //TODO 有多个接受态怎么办
+        states.find { it.accepted }?.token,
+        states
+    )
 
     override fun toString(): String {
         return "CS$id"
