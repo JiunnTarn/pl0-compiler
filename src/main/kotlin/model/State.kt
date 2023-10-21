@@ -1,37 +1,34 @@
 package model
 
 class State(
-    val id: String,
-    val accepted: Boolean,
-    val token: Token?,
+    val tag: String,
+    var accepted: Boolean,
 ) {
     companion object {
-        val START = State("S", false, null)
+        val START = State("S", false)
+
     }
 
-    constructor(compoundState: CompoundState) : this(compoundState.id, compoundState.accepted, compoundState.token)
+    constructor(compoundState: CompoundState) : this(compoundState.tag, compoundState.accepted)
 
     override fun toString(): String {
-        return "S$id"
+        return "S$tag" + if (accepted) "*" else ""
     }
 }
 
 class CompoundState(
-    val id: String,
+    val tag: String,
     val accepted: Boolean,
-    val token: Token?,
     val states: List<State>,
 ) {
-    constructor(state: State) : this(state.id, state.accepted, state.token, listOf(state))
+    constructor(state: State) : this(state.tag, state.accepted, listOf(state))
     constructor(states: List<State>) : this(
-        states.joinToString("") { it.id },
+        states.joinToString("") { it.tag },
         states.any { it.accepted },
-        //TODO 有多个接受态怎么办
-        states.find { it.accepted }?.token,
         states
     )
 
     override fun toString(): String {
-        return "CS$id"
+        return "CS$tag"
     }
 }

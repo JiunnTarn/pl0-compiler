@@ -1,7 +1,7 @@
 package model
 
 class Transition(
-    val from: State,
+    var from: State,
     val via: Char,
     var tos: List<State>
 ) {
