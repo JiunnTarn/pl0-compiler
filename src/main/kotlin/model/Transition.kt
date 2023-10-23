@@ -13,7 +13,7 @@ class Transition(
 class CompoundTransition(
     val from: CompoundState,
     val via: Char,
-    val tos: List<CompoundState>
+    val tos: List<State>
 ) {
     override fun toString(): String {
         return "CompoundTransition(from=$from, via=$via, tos=$tos)"

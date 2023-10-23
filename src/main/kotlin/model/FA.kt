@@ -2,11 +2,16 @@ package model
 
 import util.TagUtil
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
 class FA(
     var startState: State, var states: List<State>, var transitions: List<Transition>
 ) {
+    private val alphabet: List<Char>
+        get() {
+            return transitions.filter { it.via != 'ε' }.groupBy { it.via }.keys.toList()
+        }
 
     companion object {
         fun literal(via: Char): FA {
@@ -16,16 +21,6 @@ class FA(
             val transition = Transition(from = startState, via = via, tos = listOf(acceptingState))
 
             return FA(startState, listOf(startState, acceptingState), listOf(transition))
-        }
-
-        fun epsilonLoop(): FA {
-            val startState = State(tag = TagUtil.getNewTag().toString(), accepted = false)
-            val acceptingState =
-                State(tag = TagUtil.getNewTag().toString(), accepted = true)
-            val transition1 = Transition(from = startState, via = 'ε', tos = listOf(acceptingState))
-            val transition2 = Transition(from = acceptingState, via = 'ε', tos = listOf(startState))
-
-            return FA(startState, listOf(startState, acceptingState), listOf(transition1, transition2))
         }
     }
 
@@ -68,48 +63,14 @@ class FA(
         val transition2 = Transition(from = fa2AcceptingState, via = 'ε', tos = listOf(newAcceptingState))
 
         fa2.transitions.forEach { insertTransition(it) }
-
         states.forEach { it.accepted = false }
-
         fa2.states.forEach { it.accepted = false }
-
         startState = newStartState
-
         states = states.toMutableList().apply { addAll(fa2.states) }.apply { addAll(listOf(newStartState, newAcceptingState)) }.toList()
 
         insertTransition(newTransition)
         insertTransition(transition1)
         insertTransition(transition2)
-//
-//        states = states.toMutableList()
-//            .apply { addAll(fa2.states.filter { it != fa2StartState && it != fa2AcceptingState }) }.toList()
-//
-//        for (transition in fa2.transitions) {
-//            if (transition.from == fa2StartState) {
-//                transition.from = startState
-//            }
-//            if (transition.from == fa2AcceptingState) {
-//                transition.from = acceptingState
-//            }
-//            transition.tos = transition.tos.toMutableList().apply {
-//                replaceAll {
-//                    when (it) {
-//                        fa2StartState -> {
-//                            startState
-//                        }
-//                        fa2AcceptingState -> {
-//                            acceptingState
-//                        }
-//                        else -> {
-//                            it
-//                        }
-//                    }
-//                }
-//            }.toList()
-//            insertTransition(transition)
-//        }
-
-
 
         return this
     }
@@ -161,9 +122,6 @@ class FA(
         insertTransition(transition3)
 
         return this
-
-//        val epsilonLoop = epsilonLoop()
-//        return union(epsilonLoop)
     }
 
     private fun insertTransition(transition: Transition) {
@@ -182,134 +140,106 @@ class FA(
 
     }
 
-    private fun mergeEpsilon() {
-        val visited = HashSet<State>()
-        states.forEach { flattenEpsilon(it, it, visited) }
-        cleanupEpsilon()
-    }
 
-    private fun flattenEpsilon(root: State, entrance: State, visited: MutableSet<State>) {
-        visited.add(root)
-        val epsilonTosFromEntrance = HashSet<State>()
-
-        transitions.filter { it.from == entrance && it.via == 'ε' }.forEach { transition ->
-            transition.tos.forEach { to ->
-                epsilonTosFromEntrance.add(to)
-            }
-        }
-
-        for (epsilonTo in epsilonTosFromEntrance) {
-            transitions.filter { it.via != 'ε' && it.tos.contains(entrance) }.forEach {
-                val t = Transition(from = it.from, via = it.via, tos = listOf(epsilonTo))
-                insertTransition(t)
-            }
-            if (!visited.contains(epsilonTo)) {
-                transitions.filter { it.from == epsilonTo && it.via != 'ε' }.forEach {
-                    val t = Transition(from = root, via = it.via, tos = it.tos)
-                    insertTransition(t)
-                    flattenEpsilon(root, epsilonTo, visited)
-                }
-            }
-        }
-    }
-
-    private fun cleanupEpsilon() {
-        transitions = transitions.filter { it.via != 'ε' }
-    }
-
-    private fun searchStartStates(): MutableList<State> {
-        val startStates: MutableList<State> = ArrayList()
+    private fun epsilonClosure(entry: State): List<State> {
+        val epsilonStates: MutableList<State> = ArrayList()
         val stack: Stack<State> = Stack()
-        stack.add(startState)
+        stack.add(entry)
 
         while (stack.isNotEmpty()) {
             val state = stack.pop()
-            if (!startStates.contains(state)) {
-                startStates.add(state)
+            if (!epsilonStates.contains(state)) {
+                epsilonStates.add(state)
             }
             transitions.filter { it.from == state && it.via == 'ε' }.forEach {
                 for (s in it.tos) {
-                    if (!startStates.contains(s)) {
+                    if (!epsilonStates.contains(s)) {
                         stack.push(s)
                     }
                 }
             }
         }
-        return startStates
+        return epsilonStates
+    }
+
+    private fun epsilonClosure(entries: List<State>): List<State> {
+        val epsilonStates: MutableList<State> = ArrayList()
+        epsilonStates.addAll(entries)
+        val stack: Stack<State> = Stack()
+        stack.addAll(entries)
+
+        while (stack.isNotEmpty()) {
+            val s = stack.pop()
+            transitions.filter { it.from == s && it.via == 'ε' }.forEach {
+                for (to in it.tos) {
+                    if (!epsilonStates.contains(to)) {
+                        epsilonStates.add(to)
+                        stack.add(to)
+                    }
+                }
+            }
+        }
+
+        return epsilonStates
+    }
+
+    private fun move(entries: List<State>, via: Char): List<State> {
+        val destinationStates: MutableSet<State> = HashSet()
+        val viaTransitions = transitions.filter { it.via == via }
+
+        for (entry in entries) {
+            viaTransitions.filter { it.from == entry }.forEach {
+                destinationStates.addAll(it.tos)
+            }
+        }
+
+        return destinationStates.toList()
     }
 
     fun buildDFA(): FA {
-        lateinit var newCompoundStartState: CompoundState
+        val dStates: MutableList<List<State>> = ArrayList()
+        val newCompoundStates: MutableList<CompoundState> = ArrayList()
+        val newStartStates = epsilonClosure(startState)
+        val newCompoundStartState = CompoundState(newStartStates)
+        val queue: Queue<List<State>> = LinkedList()
+        val newCompoundTransitions: MutableList<CompoundTransition> = ArrayList()
+        queue.add(newStartStates)
 
-        if (hasEpsilonSide()) {
-            newCompoundStartState = CompoundState(searchStartStates())
-            mergeEpsilon()
-        } else {
-            newCompoundStartState = CompoundState(startState)
+        while (queue.isNotEmpty()) {
+            val t = queue.poll()
+            val cs = CompoundState(t)
+            newCompoundStates.add(cs)
+
+            for (a in alphabet) {
+                val u = epsilonClosure(move(t, a))
+                if (u.isEmpty()) continue
+                if (!dStates.contains(u)) {
+                    dStates.add(u)
+                    queue.add(u)
+                }
+                newCompoundTransitions.add(CompoundTransition(from = cs, via = a, tos = u))
+            }
         }
 
-        if (hasMultipleTos()) {
-            val newCompoundStates = mutableListOf<CompoundState>()
-            newCompoundStates.add(newCompoundStartState)
-            val newCompoundTransitions = mutableListOf<CompoundTransition>()
-
-            val compoundStateQueue: Queue<CompoundState> = LinkedList()
-            compoundStateQueue.add(newCompoundStartState)
-
-            while (compoundStateQueue.isNotEmpty()) {
-                val compoundState = compoundStateQueue.poll()
-
-                val transitionFromState = transitions.filter {
-                    var f = false
-                    for (s in compoundState.states) {
-                        f = f || it.from == s
-                    }
-                    f
-                }.groupBy {
-                    it.via
-                }.map { (_, group) ->
-                    Transition(group[0].from, group[0].via, group.flatMap { it.tos }.distinct())
-                }
-
-                for (transition in transitionFromState) {
-                    var toState = CompoundState(transition.tos)
-                    if (!newCompoundStates.any { it.states == toState.states }) {
-                        newCompoundStates.add(toState)
-                        compoundStateQueue.add(toState)
-                    } else {
-                        toState = newCompoundStates.find { it.states == toState.states }!!
-                    }
-                    val newCompoundTransition = CompoundTransition(
-                        from = compoundState, via = transition.via, tos = listOf(toState)
-                    )
-                    newCompoundTransitions.add(newCompoundTransition)
-                }
-            }
-
-//            println("newCompoundStates: $newCompoundStates")
-//            println("newCompoundTransitions: $newCompoundTransitions")
-
-            val newStartState = State(newCompoundStartState)
-            val stateMap: MutableMap<CompoundState, State> = HashMap()
-            val newStates = newCompoundStates.map { compoundState ->
-                val s = State(compoundState)
-                stateMap[compoundState] = s
-                s
-            }
-            val newTransitions = newCompoundTransitions.map { compoundTransition ->
-                Transition(
-                    from = stateMap[compoundTransition.from]!!,
-                    via = compoundTransition.via,
-                    tos = listOf(stateMap[compoundTransition.tos[0]]!!)
-                )
-            }
-            return FA(
-                startState = newStartState,
-                states = newStates,
-                transitions = newTransitions
+        val newStartState = State(newCompoundStartState)
+        val stateMap: MutableMap<List<State>, State> = HashMap()
+        val newStates = newCompoundStates.map { compoundState ->
+            val s = State(compoundState)
+            stateMap[compoundState.states] = s
+            s
+        }
+        val newTransitions = newCompoundTransitions.map { compoundTransition ->
+            Transition(
+                from = stateMap[compoundTransition.from.states]!!,
+                via = compoundTransition.via,
+                tos = listOf(stateMap[compoundTransition.tos]!!)
             )
         }
-        return this
+        return FA(
+            startState = newStartState,
+            states = newStates,
+            transitions = newTransitions
+        )
     }
 
     override fun toString(): String {

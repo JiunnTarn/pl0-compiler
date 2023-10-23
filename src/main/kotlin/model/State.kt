@@ -31,4 +31,10 @@ class CompoundState(
     override fun toString(): String {
         return "CS$tag"
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (other == null) return false
+        if (other.javaClass != CompoundState::class.java) return false
+        return this.states == (other as CompoundState).states
+    }
 }
