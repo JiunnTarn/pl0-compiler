@@ -2,15 +2,15 @@
 //import model.TokenId
 //
 //fun main() {
-//    val state0: State = State(
+//    val state0 = State(
 //        tag = "A",
 //        accepted = false,
 //    )
-//    val state1: State = State(
+//    val state1 = State(
 //        tag = "B",
 //        accepted = false,
 //    )
-//    val state2: State = State(
+//    val state2 = State(
 //        tag = "C",
 //        accepted = true,
 //    )
@@ -19,35 +19,35 @@
 //        state1,
 //        state2,
 //    )
-//    val transition0: Transition = Transition(
+//    val transition0 = Transition(
 //        from = state0,
 //        via = '0',
 //        tos = listOf(
 //            state0
 //        )
 //    )
-//    val transition1: Transition = Transition(
+//    val transition1 = Transition(
 //        from = state0,
 //        via = 'ε',
 //        tos = listOf(
 //            state1
 //        )
 //    )
-//    val transition2: Transition = Transition(
+//    val transition2 = Transition(
 //        from = state1,
 //        via = '1',
 //        tos = listOf(
 //            state1
 //        )
 //    )
-//    val transition3: Transition = Transition(
+//    val transition3 = Transition(
 //        from = state1,
 //        via = 'ε',
 //        tos = listOf(
 //            state2
 //        )
 //    )
-//    val transition4: Transition = Transition(
+//    val transition4 = Transition(
 //        from = state2,
 //        via = '2',
 //        tos = listOf(
@@ -71,31 +71,32 @@
 //    println(dfa)
 //}
 
-import model.*
-import model.TokenId
+import model.FA
+import model.State
+import model.Transition
 
-fun main(args: Array<String>) {
-    val state0: State = State(
+fun main() {
+    val state0 = State(
         tag = "0",
         accepted = false,
     )
-    val state1: State = State(
+    val state1 = State(
         tag = "1",
         accepted = false,
     )
-    val state2: State = State(
+    val state2 = State(
         tag = "2",
         accepted = false,
     )
-    val state3: State = State(
+    val state3 = State(
         tag = "3",
         accepted = false,
     )
-    val state4: State = State(
+    val state4 = State(
         tag = "4",
         accepted = false,
     )
-    val state5: State = State(
+    val state5 = State(
         tag = "5",
         accepted = true,
     )
@@ -107,56 +108,56 @@ fun main(args: Array<String>) {
         state4,
         state5,
     )
-    val transition0: Transition = Transition(
+    val transition0 = Transition(
         from = state0,
         via = 'a',
         tos = listOf(
             state1
         )
     )
-    val transition1: Transition = Transition(
+    val transition1 = Transition(
         from = state1,
         via = 'b',
         tos = listOf(
             state2
         )
     )
-    val transition2: Transition = Transition(
+    val transition2 = Transition(
         from = state1,
         via = 'c',
         tos = listOf(
             state3
         )
     )
-    val transition3: Transition = Transition(
+    val transition3 = Transition(
         from = state2,
         via = 'ε',
         tos = listOf(
             state4
         )
     )
-    val transition4: Transition = Transition(
+    val transition4 = Transition(
         from = state3,
         via = 'ε',
         tos = listOf(
             state4
         )
     )
-    val transition5: Transition = Transition(
+    val transition5 = Transition(
         from = state1,
         via = 'ε',
         tos = listOf(
             state4
         )
     )
-    val transition6: Transition = Transition(
+    val transition6 = Transition(
         from = state4,
         via = 'ε',
         tos = listOf(
             state1
         )
     )
-    val transition7: Transition = Transition(
+    val transition7 = Transition(
         from = state4,
         via = 'ε',
         tos = listOf(
@@ -173,7 +174,7 @@ fun main(args: Array<String>) {
         transition6,
         transition7,
     )
-    val nfa: FA = FA(
+    val nfa = FA(
         startState = state0,
         states = states,
         transitions = transitions

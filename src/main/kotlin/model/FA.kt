@@ -2,8 +2,6 @@ package model
 
 import util.TagUtil
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashSet
 
 class FA(
     var startState: State, var states: List<State>, var transitions: List<Transition>
@@ -21,6 +19,94 @@ class FA(
             val transition = Transition(from = startState, via = via, tos = listOf(acceptingState))
 
             return FA(startState, listOf(startState, acceptingState), listOf(transition))
+        }
+
+        fun fromRE(re: String, tokenId: Int? = null): FA {
+            val faStack = Stack<FA>()
+            val opStack = Stack<Char>()
+            var subRE = ""
+            var cnt = 0
+            var i = 0
+
+            while (i < re.length) {
+                var c = re[i]
+                if (subRE.isEmpty()) {
+                    when (c) {
+                        '~' -> {
+                            c = re[++i]
+                            if (faStack.isNotEmpty() && (opStack.isEmpty() || opStack.peek() != '|')) {
+                                opStack.push('-')
+                            }
+                            faStack.push(literal(c))
+                        }
+
+                        '*' -> {
+                            val fa = faStack.pop()
+                            val newFA = fa.closure()
+                            faStack.push(newFA)
+                        }
+
+                        '|' -> {
+                            if (opStack.isNotEmpty() && opStack.peek() == '-') {
+                                var newFA: FA = faStack.pop()
+                                while (opStack.isNotEmpty() && faStack.isNotEmpty() && opStack.peek() == '-') {
+                                    opStack.pop()
+                                    newFA = faStack.pop().concatenate(newFA)
+                                }
+                                faStack.push(newFA)
+                            }
+                            opStack.push(c)
+                        }
+
+                        '(' -> {
+                            ++cnt
+                            subRE = "("
+                        }
+
+                        else -> {
+                            if (faStack.isNotEmpty() && (opStack.isEmpty() || opStack.peek() != '|')) {
+                                opStack.push('-')
+                            }
+                            faStack.push(literal(c))
+                        }
+                    }
+                } else {
+                    subRE += c
+                    if (c == '(') ++cnt
+                    if (c == ')') --cnt
+                    if (cnt == 0) {
+                        val subFA = fromRE(subRE.substring(1..<subRE.length - 1))
+                        if (faStack.isNotEmpty() && (opStack.isEmpty() || opStack.peek() != '|')) {
+                            opStack.push('-')
+                        }
+                        faStack.push(subFA)
+                        cnt = 0
+                        subRE = ""
+                    }
+                }
+                ++i
+            }
+            if (opStack.isNotEmpty()) {
+                if (opStack.peek() == '-') {
+                    var newFA: FA = faStack.pop()
+                    while (opStack.isNotEmpty() && faStack.isNotEmpty() && opStack.peek() == '-') {
+                        opStack.pop()
+                        newFA = faStack.pop().concatenate(newFA)
+                    }
+                    faStack.push(newFA)
+                }
+                var newFA: FA = faStack.pop()
+                while (opStack.isNotEmpty() && faStack.isNotEmpty() && opStack.peek() == '|') {
+                    opStack.pop()
+                    newFA = faStack.pop().union(newFA)
+                }
+                faStack.push(newFA)
+            }
+
+
+            val f = faStack.pop()
+            f.states.filter { it.accepted }.forEach { it.tokenId = tokenId }
+            return f
         }
     }
 
@@ -47,8 +133,8 @@ class FA(
         return states.first { it.accepted }
     }
 
-    fun isNFA(): Boolean {
-        return !(hasMultipleTos() || hasEpsilonSide())
+    private fun isNFA(): Boolean {
+        return hasMultipleTos() || hasEpsilonSide()
     }
 
     fun union(fa2: FA): FA {
@@ -66,7 +152,8 @@ class FA(
         states.forEach { it.accepted = false }
         fa2.states.forEach { it.accepted = false }
         startState = newStartState
-        states = states.toMutableList().apply { addAll(fa2.states) }.apply { addAll(listOf(newStartState, newAcceptingState)) }.toList()
+        states = states.toMutableList().apply { addAll(fa2.states) }
+            .apply { addAll(listOf(newStartState, newAcceptingState)) }.toList()
 
         insertTransition(newTransition)
         insertTransition(transition1)
@@ -200,7 +287,6 @@ class FA(
         val dStates: MutableList<List<State>> = ArrayList()
         val newCompoundStates: MutableList<CompoundState> = ArrayList()
         val newStartStates = epsilonClosure(startState)
-        val newCompoundStartState = CompoundState(newStartStates)
         val queue: Queue<List<State>> = LinkedList()
         val newCompoundTransitions: MutableList<CompoundTransition> = ArrayList()
         queue.add(newStartStates)
@@ -221,13 +307,13 @@ class FA(
             }
         }
 
-        val newStartState = State(newCompoundStartState)
         val stateMap: MutableMap<List<State>, State> = HashMap()
         val newStates = newCompoundStates.map { compoundState ->
             val s = State(compoundState)
             stateMap[compoundState.states] = s
             s
         }
+        val newStartState = stateMap[newStartStates]!!
         val newTransitions = newCompoundTransitions.map { compoundTransition ->
             Transition(
                 from = stateMap[compoundTransition.from.states]!!,
@@ -240,6 +326,52 @@ class FA(
             states = newStates,
             transitions = newTransitions
         )
+    }
+
+    fun match(input: String): List<Token>? {
+        var i = 0
+
+        val tokens = ArrayList<Token>()
+        var longestMatch: Token? = null
+        var longestPosition = 0
+        var lastPosition = 0
+
+        var pattern = this
+        if (pattern.isNFA()) {
+            pattern = pattern.buildDFA()
+        }
+
+        var currentState = pattern.startState
+        while (i < input.length) {
+            val c = input[i]
+            val nextStates = pattern.move(listOf(currentState), c)
+            if (nextStates.size != 1) {
+                if (longestMatch == null) {
+                    return null
+                } else {
+                    tokens.add(longestMatch)
+                    longestMatch = null
+                    lastPosition = i
+                    currentState = pattern.startState
+                    i = longestPosition + 1
+                    continue
+                }
+            }
+            currentState = nextStates[0]
+            if (currentState.accepted) {
+                longestMatch = currentState.tokenId?.let { Token(it, input.substring(lastPosition, i+1)) }
+                longestPosition = i
+            }
+            ++i
+        }
+        if (longestPosition == input.length - 1) {
+            if (longestMatch == null) {
+                return null
+            } else {
+                tokens.add(longestMatch)
+            }
+        }
+        return tokens
     }
 
     override fun toString(): String {
