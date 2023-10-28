@@ -328,7 +328,7 @@ class FA(
         )
     }
 
-    fun match(input: String): List<Token>? {
+    fun match(input: String): List<Token> {
         var i = 0
 
         val tokens = ArrayList<Token>()
@@ -347,7 +347,7 @@ class FA(
             val nextStates = pattern.move(listOf(currentState), c)
             if (nextStates.size != 1) {
                 if (longestMatch == null) {
-                    return null
+                    return listOf(ErrorToken())
                 } else {
                     tokens.add(longestMatch)
                     longestMatch = null
@@ -366,7 +366,7 @@ class FA(
         }
         if (longestPosition == input.length - 1) {
             if (longestMatch == null) {
-                return null
+                return listOf(ErrorToken())
             } else {
                 tokens.add(longestMatch)
             }

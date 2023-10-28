@@ -1,6 +1,6 @@
 package model
 
-class Token(
+open class Token(
     private val id: Int,
     private val value: String?
 ) {
@@ -8,3 +8,5 @@ class Token(
         return "Token(id=$id, value=$value)"
     }
 }
+
+class ErrorToken() : Token(TokenId.ERR, null)

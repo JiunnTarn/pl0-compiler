@@ -60,6 +60,11 @@ internal object TokenId {
      */
     const val IDN = 500
 
+    /**
+     * ERR: 解析失败
+     */
+    const val ERR = 0
+
 }
 
 internal object RE {
