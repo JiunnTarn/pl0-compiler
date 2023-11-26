@@ -174,8 +174,8 @@ internal object PRODUCTIONS {
     // <条件语句>	    →	IF<条件>THEN<语句>
     // <过程调用语句>	→	CALL<标识符>
     // <当型循环语句>	→	WHILE<条件>DO<语句>
-    // <读语句>	    →	READ(<标识符>{,<标识符>})
-    // <写语句>	    →	WRITE(<标识符>{,<标识符>})
+    // <读语句>	    →	READ(<表达式>{,<表达式>})
+    // <写语句>	    →	WRITE(<表达式>{,<表达式>})
     // <空语句>	    →	epsilon
 
     val productions = listOf(

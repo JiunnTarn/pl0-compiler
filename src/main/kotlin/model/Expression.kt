@@ -32,6 +32,8 @@ data class Expression(
     }
 
     fun buildParseTreeNode(input: Stack<Expression>): ParseTreeNode {
+        val node = ParseTreeNode(this)
+        if (input.isEmpty()) return node
         if (isTerminal) {
             if(input.peek().id != id && !(isEpsilon || isEmpty)) {
                 throw Exception("语法错误: ${input.peek()}")
@@ -45,7 +47,6 @@ data class Expression(
             }
             return ParseTreeNode(e)
         }
-        val node = ParseTreeNode(this)
         val production = try {
              productions.first({ it.firstSet().contains(input.peek()) }, { it.isEpsilon() })
         } catch (e: NoSuchElementException) {
