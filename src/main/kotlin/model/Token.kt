@@ -1,12 +1,13 @@
 package model
 
 open class Token(
-    private val id: Int,
-    private val value: String?
+    val id: Int,
+    val value: String?,
+    val line: Int? = null
 ) {
     override fun toString(): String {
-        return "Token(id=$id, value=$value)"
+        return "Token(id=$id, value=$value, line=$line)"
     }
 }
 
-class ErrorToken() : Token(TokenId.ERR, null)
+class ErrorToken(line: Int) : Token(TokenId.ERR, null, line)

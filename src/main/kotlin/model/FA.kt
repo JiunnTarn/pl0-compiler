@@ -32,7 +32,7 @@ class FA(
                 var c = re[i]
                 if (subRE.isEmpty()) {
                     when (c) {
-                        '~' -> {
+                        '\\' -> {
                             c = re[++i]
                             if (faStack.isNotEmpty() && (opStack.isEmpty() || opStack.peek() != '|')) {
                                 opStack.push('-')
@@ -328,7 +328,7 @@ class FA(
         )
     }
 
-    fun match(input: String): List<Token> {
+    fun match(input: String, line: Int): List<Token> {
         var i = 0
 
         val tokens = ArrayList<Token>()
@@ -347,7 +347,7 @@ class FA(
             val nextStates = pattern.move(listOf(currentState), c)
             if (nextStates.size != 1) {
                 if (longestMatch == null) {
-                    return listOf(ErrorToken())
+                    return listOf(ErrorToken(line))
                 } else {
                     tokens.add(longestMatch)
                     longestMatch = null
@@ -359,14 +359,14 @@ class FA(
             }
             currentState = nextStates[0]
             if (currentState.accepted) {
-                longestMatch = currentState.tokenId?.let { Token(it, input.substring(lastPosition, i+1)) }
+                longestMatch = currentState.tokenId?.let { Token(it, input.substring(lastPosition, i+1), line) }
                 longestPosition = i
             }
             ++i
         }
         if (longestPosition == input.length - 1) {
             if (longestMatch == null) {
-                return listOf(ErrorToken())
+                return listOf(ErrorToken(line))
             } else {
                 tokens.add(longestMatch)
             }

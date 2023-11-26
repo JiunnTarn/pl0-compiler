@@ -1,5 +1,6 @@
-import model.*
+import model.FA
 import model.RE
+import model.Token
 import model.TokenId
 import java.util.regex.Pattern
 
@@ -50,10 +51,14 @@ class Lexer {
             .buildDFA()
     }
 
-    fun parse(input: String): List<Token> {
+    fun analyze(input: String): List<Token> {
         val tokens = ArrayList<Token>()
-        input.split(regex = Pattern.compile("[ \n\r\t]+")).forEach {
-            tokens.addAll(fa.match(it))
+        val lines = input.split("\n")
+        for (l in lines.indices) {
+            val line = lines[l]
+            line.split(regex = Pattern.compile("[ \r\t]+")).forEach {
+                tokens.addAll(fa.match(it, l + 1))
+            }
         }
         return tokens
     }
