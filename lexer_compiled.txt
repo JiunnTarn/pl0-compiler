@@ -1,30 +1,24 @@
-NAME: a	KIND: constant	VAL: 10
-NAME: b	KIND: variable	LEVEL: 0	ADR: 3
-NAME: c	KIND: variable	LEVEL: 0	ADR: 4
-NAME: p	KIND: procedure	LEVEL: 0	ADR: 2
-
-
-1	jmp	0	2
-2	int	0	3
-3	lod	1	3
-4	lit	0	10
-5	opr	0	2
-6	sto	1	4
-7	opr	0	0
-8	int	0	5
-9	opr	0	16
-10	sto	0	3
-11	lod	0	3
-12	lit	0	0
-13	opr	0	9
-14	jpc	0	24
-15	cal	0	2
-16	lit	0	2
-17	lod	0	4
-18	opr	0	4
-19	opr	0	14
-20	opr	0	15
-21	opr	0	16
-22	sto	0	3
-23	jmp	0	11
-24	opr	0	0
+1	JMP	0	8
+2	INT	0	3
+3	LOD	1	3
+4	LIT	1	10
+5	OPR	0	2
+6	STO	1	4
+7	OPR	0	0
+8	INT	0	5
+9	OPR	0	16
+10	STO	0	3
+11	LOD	0	3
+12	LIT	0	0
+13	OPR	0	9
+14	JPC	0	24
+15	CAL	0	2
+16	LIT	0	2
+17	LOD	0	4
+18	OPR	0	4
+19	OPR	0	14
+20	OPR	0	15
+21	OPR	0	16
+22	STO	0	3
+23	JMP	0	11
+24	OPR	0	0

@@ -6,6 +6,7 @@ fun main() {
     val lexer = Lexer()
     val parser = Parser()
     val codeGenerator = CodeGenerator()
+    val interpreter = Interpreter()
 
     val inputFilePath = "./lexer_test.txt"
     val inputFile = File(inputFilePath)
@@ -16,6 +17,8 @@ fun main() {
     val parseTree = parser.parse(tokenList)
     parseTree.compile()
 
-    codeGenerator.printSymbolTable()
-    codeGenerator.printCode()
+//    codeGenerator.printSymbolTable()
+//    codeGenerator.printCodes()
+
+    interpreter.interpret(codeGenerator.getCodes())
 }

@@ -74,11 +74,12 @@ data class ParseTreeNode(
 
             "PROCEDURE_DECLARE" -> {
                 check(children[0].expression.tag == "PROCEDURE_HEAD")
-                CodeGenerator.declareProc(children[0].children[1].expression, curLevel)
+                val entry = CodeGenerator.declareProc(children[0].children[1].expression, curLevel)
 
                 children.forEach {
                     it.compile(curLevel + 1)
                 }
+                CodeGenerator.insertCode(entry - 1, Code("JMP", 0, CodeGenerator.nextCodeIndex() + 1))
             }
 
             "PROGRAM_BODY" -> {

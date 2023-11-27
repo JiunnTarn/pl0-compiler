@@ -9,12 +9,14 @@ class CodeGenerator {
         symbolTable.forEach { println(it) }
     }
 
-    fun printCode() {
+    fun printCodes() {
         for (i in codes.indices) {
             val instruction = codes[i]
             println("${i + 1}\t$instruction")
         }
     }
+
+    fun getCodes() = codes
 
     companion object {
         private val symbolTable = mutableListOf<Symbol>()
@@ -34,7 +36,7 @@ class CodeGenerator {
 
         fun declareProc(expression: Expression, level: Int): Int {
             val entry = codes.size + 1
-            symbolTable.add(Symbol(expression.tag, SymbolType.PROCEDURE, level, entry))
+            symbolTable.add(Symbol(expression.tag, SymbolType.PROCEDURE, level, entry + 1))
             return entry
         }
 
