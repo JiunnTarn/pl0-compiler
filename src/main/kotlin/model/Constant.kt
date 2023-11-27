@@ -154,12 +154,13 @@ internal object ExpressionId {
 internal object PRODUCTIONS {
 
     // <程序>	    →	<分程序>.
-    // <分程序>	    →	[<常量说明部分>][<变量说明部分>][<过程说明部分>]<语句>
+    // <分程序>	    →	[<常量说明部分>][<变量说明部分>]{<过程说明部分>}<程序体>
+    // <程序体>	    →	<语句>
     // <常量说明部分>	→	CONST<常量定义>{,<常量定义>};
     // <常量定义>	    →	<标识符>=<无符号整数>
     // <无符号整数>	→	<数字>{<数字>}
     // <变量说明部分>	→	VAR<标识符>{,<标识符>};
-    // <过程说明部分>	→	<过程首部><分程序>;[<过程说明部分>]
+    // <过程说明部分>	→	<过程首部><分程序>;
     // <过程首部>	    →	PROCEDURE<标识符>;
     // <语句>	    →	<赋值语句>|<条件语句>|<当型循环语句>|<过程调用语句>|<读语句>|<写语句>|<复合语句>|<空语句>
     // <赋值语句>	    →	<标识符>:=<表达式>
@@ -174,17 +175,18 @@ internal object PRODUCTIONS {
     // <条件语句>	    →	IF<条件>THEN<语句>
     // <过程调用语句>	→	CALL<标识符>
     // <当型循环语句>	→	WHILE<条件>DO<语句>
-    // <读语句>	    →	READ(<表达式>{,<表达式>})
+    // <读语句>	    →	READ(<标识符>{,<标识符>})
     // <写语句>	    →	WRITE(<表达式>{,<表达式>})
     // <空语句>	    →	epsilon
 
     val productions = listOf(
         "<PROGRAM>→<SUB_PROGRAM>\$.",
-        "<SUB_PROGRAM>→[<CONSTANT_DECLARE>][<VARIABLE_DECLARE>][<PROCEDURE_DECLARE>]<SENTENCE>",
+        "<SUB_PROGRAM>→[<CONSTANT_DECLARE>][<VARIABLE_DECLARE>]{<PROCEDURE_DECLARE>}<PROGRAM_BODY>",
+        "<PROGRAM_BODY>→<SENTENCE>",
         "<CONSTANT_DECLARE>→\$CONST<CONSTANT_DEFINE>{\$,<CONSTANT_DEFINE>}\$;",
         "<CONSTANT_DEFINE>→\$ID\$=\$NUM",
         "<VARIABLE_DECLARE>→\$VAR\$ID{\$,\$ID}\$;",
-        "<PROCEDURE_DECLARE>→<PROCEDURE_HEAD><SUB_PROGRAM>\$;[<PROCEDURE_DECLARE>]",
+        "<PROCEDURE_DECLARE>→<PROCEDURE_HEAD><SUB_PROGRAM>\$;",
         "<PROCEDURE_HEAD>→\$PROCEDURE\$ID\$;",
         "<SENTENCE>→<ASSIGNMENT>|<IF_SENTENCE>|<WHILE_SENTENCE>|<CALL_SENTENCE>|<READ_SENTENCE>|<WRITE_SENTENCE>|<COMBINED>|\$EMPTY",
         "<ASSIGNMENT>→\$ID\$:=<EXPRESSION>",
@@ -199,7 +201,7 @@ internal object PRODUCTIONS {
         "<IF_SENTENCE>→\$IF<CONDITION>\$THEN<SENTENCE>",
         "<CALL_SENTENCE>→\$CALL\$ID",
         "<WHILE_SENTENCE>→\$WHILE<CONDITION>\$DO<SENTENCE>",
-        "<READ_SENTENCE>→\$READ\$(<EXPRESSION>{\$,<EXPRESSION>}\$)",
+        "<READ_SENTENCE>→\$READ\$(\$ID{\$,\$ID}\$)",
         "<WRITE_SENTENCE>→\$WRITE\$(<EXPRESSION>{\$,<EXPRESSION>}\$)"
     )
 }
@@ -239,4 +241,26 @@ internal object EXPRESSIONS {
         "READ" to Expression(Token(TokenId.KW_RD, "read")),
         "WRITE" to Expression(Token(TokenId.KW_WR, "write"))
     )
+}
+
+internal object CodeOpr {
+    private val oprs = mapOf(
+        TokenId.OP_ADD to 2,
+        TokenId.OP_SUB to 1,
+        TokenId.OP_MUL to 4,
+        TokenId.OP_DIV to 5,
+        TokenId.OP_EQ to 8,
+        TokenId.OP_NEQ to 9,
+        TokenId.OP_LT to 10,
+        TokenId.OP_LTE to 12,
+        TokenId.OP_GT to 11,
+        TokenId.OP_GTE to 10,
+        TokenId.KW_RD to 16,
+        TokenId.KW_WR to 14,
+        TokenId.KW_ODD to 6,
+    )
+
+    fun getOpr(tokenId: Int): Int {
+        return oprs[tokenId] ?: throw Exception("操作符未找到")
+    }
 }

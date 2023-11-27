@@ -5,6 +5,7 @@ import java.nio.charset.Charset
 fun main() {
     val lexer = Lexer()
     val parser = Parser()
+    val codeGenerator = CodeGenerator()
 
     val inputFilePath = "./lexer_test.txt"
     val inputFile = File(inputFilePath)
@@ -12,5 +13,9 @@ fun main() {
     val input = inputStream.readBytes().toString(Charset.defaultCharset())
 
     val tokenList = lexer.analyze(input)
-    println(parser.parse(tokenList))
+    val parseTree = parser.parse(tokenList)
+    parseTree.compile()
+
+    codeGenerator.printSymbolTable()
+    codeGenerator.printCode()
 }
