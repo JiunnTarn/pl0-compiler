@@ -2,6 +2,7 @@ const a=10, d=5;
 var b,c;
 
 procedure p;
+var d;
 begin
   c:=b+a;
 end;

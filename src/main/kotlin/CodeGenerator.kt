@@ -21,11 +21,9 @@ class CodeGenerator {
     companion object {
         private val symbolTable = mutableListOf<Symbol>()
         private val codes = mutableListOf<Code>()
-        private var nextMemoryAddress = 3
 
         fun allocateMemory(expression: Expression, level: Int) {
-            symbolTable.add(Symbol(expression.tag, SymbolType.VARIABLE, level, nextMemoryAddress))
-            nextMemoryAddress++
+            symbolTable.add(Symbol(expression.tag, SymbolType.VARIABLE, level, getVariableCount(level) + 3))
         }
 
         fun getVariableCount(level: Int) = symbolTable.count { it.type == SymbolType.VARIABLE && it.level == level }

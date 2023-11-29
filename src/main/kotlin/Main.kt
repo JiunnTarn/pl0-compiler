@@ -14,7 +14,11 @@ fun main() {
     val input = inputStream.readBytes().toString(Charset.defaultCharset())
 
     val tokenList = lexer.analyze(input)
+//    println(tokenList)
+
     val parseTree = parser.parse(tokenList)
+//    println(parseTree)
+
     parseTree.compile()
 
 //    codeGenerator.printSymbolTable()
